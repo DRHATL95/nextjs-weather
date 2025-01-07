@@ -2,58 +2,11 @@
 
 import { useState } from "react";
 import Image from "next/image";
-
-type WeatherResponse = {
-  location: LocationResponse;
-  current: CurrentResponse;
-};
-
-type LocationResponse = {
-  name: string;
-  region: string;
-  country: string;
-  lat: number;
-  lon: number;
-  tz_id: string;
-  localtime_epoch: number;
-  localtime: string;
-};
-
-type CurrentResponse = {
-  last_updated_epoch: number;
-  last_updated: string;
-  temp_c: number;
-  temp_f: number;
-  is_day: number;
-  condition: {
-    text: string;
-    icon: string;
-    code: number;
-  };
-  wind_mph: number;
-  wind_kph: number;
-  wind_degree: number;
-  wind_dir: string;
-  pressure_mb: number;
-  pressure_in: number;
-  precip_mm: number;
-  precip_in: number;
-  humidity: number;
-  cloud: number;
-  feelslike_c: number;
-  feelslike_f: number;
-  vis_km: number;
-  vis_miles: number;
-  uv: number;
-  gust_mph: number;
-  gust_kph: number;
-};
-
-const WEATHER_API_BASE = "http://api.weatherapi.com/v1";
+import { WeatherResponse } from "@/utils/types";
 
 async function getWeatherForZipCode(
   zipCode: string,
-  setWeather: (weather: WeatherResponse) => void
+  setWeather: (weather: WeatherResponse | null) => void
 ) {
   if (zipCode === "") {
     console.error("Zip code not set");
@@ -65,21 +18,26 @@ async function getWeatherForZipCode(
     return;
   }
 
-  if (process.env.WEATHER_API_KEY === undefined) {
-    console.error("WEATHER_API_KEY not set");
-    return;
-  }
-
   if (isNaN(parseInt(zipCode))) {
     console.error("Zip code must be a number");
     return;
   }
 
-  const url = `${WEATHER_API_BASE}/current.json?key=${process.env.WEATHER_API_KEY}&q=${zipCode}`;
-  const request = await fetch(url);
-  const response: WeatherResponse = await request.json();
+  const request = await fetch("/api/weather?zipCode=" + zipCode);
 
-  setWeather(response);
+  if (!request.ok) {
+    console.error("Weather API request failed");
+    setWeather(null);
+    return;
+  }
+
+  try {
+    const response: WeatherResponse = await request.json();
+    setWeather(response);
+  } catch (error) {
+    console.error("Failed to parse JSON response:", error);
+    setWeather(null);
+  }
 }
 
 function convertCelciusToFahrenheit(celcius: number | undefined): number {
@@ -117,7 +75,7 @@ export default function Home() {
               Get Weather
             </button>
           </div>
-          {weather && (
+          {weather&& (
             <div className="flex flex-col gap-4 items-center border border-gray-300 p-4 rounded w-full">
               <p>
                 {weather.location.name}, {weather.location.region}
