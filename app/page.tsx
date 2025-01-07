@@ -75,7 +75,7 @@ export default function Home() {
               Get Weather
             </button>
           </div>
-          {weather&& (
+          {weather && (
             <div className="flex flex-col gap-4 items-center border border-gray-300 p-4 rounded w-full">
               <p>
                 {weather.location.name}, {weather.location.region}
