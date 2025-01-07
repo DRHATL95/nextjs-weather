@@ -55,8 +55,6 @@ async function getWeatherForZipCode(
   zipCode: string,
   setWeather: (weather: WeatherResponse) => void
 ) {
-  console.log("In here..");
-
   if (zipCode === "") {
     console.error("Zip code not set");
     return;
@@ -67,7 +65,7 @@ async function getWeatherForZipCode(
     return;
   }
 
-  if (process.env.NEXT_PUBLIC_WEATHER_API_KEY === undefined) {
+  if (process.env.WEATHER_API_KEY === undefined) {
     console.error("WEATHER_API_KEY not set");
     return;
   }
@@ -77,12 +75,10 @@ async function getWeatherForZipCode(
     return;
   }
 
-  const url = `${WEATHER_API_BASE}/current.json?key=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}&q=${zipCode}`;
-  console.log(url);
+  const url = `${WEATHER_API_BASE}/current.json?key=${process.env.WEATHER_API_KEY}&q=${zipCode}`;
   const request = await fetch(url);
   const response: WeatherResponse = await request.json();
 
-  console.log(response);
   setWeather(response);
 }
 
@@ -121,31 +117,33 @@ export default function Home() {
               Get Weather
             </button>
           </div>
-          <div className="flex flex-col gap-4 items-center border border-gray-300 p-4 rounded w-full">
-            <p>{weather?.location.name}, {weather?.location.region}</p>
-            {weather && weather.current.condition ? (
-              <div className="flex flex-col items-center">
-                <Image
-                  src={`https:${weather?.current.condition.icon}`}
-                  alt={weather?.current.condition.text}
-                  width={50}
-                  height={50}
-                />
-                <p>{weather?.current.condition.text}</p>
-              </div>
-            ) : (
-              ""
-            )}
-            <p
-              className="cursor-pointer"
-              onClick={() => setIsCelcius(!isCelcius)}
-            >
-              {isCelcius
-                ? weather?.current.temp_c + " °C"
-                : convertCelciusToFahrenheit(weather?.current.temp_c) + " °F"}
-            </p>
-            <p>Wind: {weather?.current.wind_kph} kph</p>
-          </div>
+          {weather && (
+            <div className="flex flex-col gap-4 items-center border border-gray-300 p-4 rounded w-full">
+              <p>
+                {weather.location.name}, {weather.location.region}
+              </p>
+              {weather.current.condition && (
+                <div className="flex flex-col items-center">
+                  <Image
+                    src={`https:${weather.current.condition.icon}`}
+                    alt={weather.current.condition.text}
+                    width={50}
+                    height={50}
+                  />
+                  <p>{weather.current.condition.text}</p>
+                </div>
+              )}
+              <p
+                className="cursor-pointer"
+                onClick={() => setIsCelcius(!isCelcius)}
+              >
+                {isCelcius
+                  ? weather.current.temp_c + " °C"
+                  : convertCelciusToFahrenheit(weather.current.temp_c) + " °F"}
+              </p>
+              <p>Wind: {weather.current.wind_kph} kph</p>
+            </div>
+          )}
         </div>
       </main>
     </div>
